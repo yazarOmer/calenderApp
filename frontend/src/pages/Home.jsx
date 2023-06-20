@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/solid'
 import Meeting from '../components/Meeting'
 import AddScheduleModal from '../components/AddScheduleModal'
+import { getGoals, reset } from '../features/goals/goalSlice'
 import {
   add,
   eachDayOfInterval,
@@ -18,6 +19,7 @@ import {
   parseISO,
   startOfToday,
 } from 'date-fns'
+
 
 const meetings = [
   {
@@ -64,21 +66,32 @@ const meetings = [
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
-}
+} 
 
 const Home = () => {
 
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   const { user } = useSelector((state) => state.auth)
+  const { goals, isLoading, isError, message } = useSelector((state) => state.goals)
 
   useEffect(() => {
+    if(isError) {
+      console.log(message)
+    }
 
     if(!user) {
       navigate('/login')
     }
 
-  }, [user, navigate])
+    dispatch(getGoals())
+
+    return () => {
+      dispatch(reset())
+    }
+
+  }, [user, navigate, isError, message, dispatch])
 
 
 
@@ -108,7 +121,7 @@ const Home = () => {
     setCurrentMonth(format(firstDayNextMonth, 'MMM-yyyy'))
   }
 
-  let selectedDayMeetings = meetings.filter((schedule) =>
+  let selectedDayMeetings = goals.filter((schedule) =>
     isSameDay(parseISO(schedule.day), selectedDay)
   )
 
@@ -188,8 +201,8 @@ const Home = () => {
                     </button>
   
                     <div className="w-1 h-1 mx-auto mt-1">
-                      {meetings.some((schedule) =>
-                        isSameDay(parseISO(schedule.day), day)
+                      {goals.some((goal) =>
+                        isSameDay(parseISO(goal.day), day)
                       ) && (
                         <div className="w-1 h-1 rounded-full bg-sky-500"></div>
                       )}
